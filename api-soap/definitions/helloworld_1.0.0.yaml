@@ -1,0 +1,338 @@
+swagger: '2.0'
+info:
+  x-ibm-name: helloworld
+  title: HelloWorld
+  version: 1.0.0
+schemes:
+  - https
+host: $(catalog.host)
+basePath: /helloworld
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientIdHeader: []
+x-ibm-configuration:
+  testable: true
+  enforced: true
+  cors:
+    enabled: true
+  assembly:
+    execute:
+      - map:
+          title: 'NewOperation: input'
+          inputs:
+            name:
+              schema:
+                type: string
+              variable: request.body
+          outputs:
+            body:
+              schema:
+                $ref: >-
+                  #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperationInput
+              variable: message.body
+              content: application/xml
+            content-type:
+              schema:
+                type: string
+              variable: message.headers.content-type
+            SOAPAction:
+              schema:
+                type: string
+              variable: message.headers.SOAPAction
+          actions:
+            - set: content-type
+              default: text/xml
+            - set: SOAPAction
+              default: NewOperation
+            - set: body.Envelope.Body.NewOperation.in
+              from: name
+      - invoke:
+          title: 'NewOperation: invoke'
+          target-url: 'http://Dawn:8100/SOAPServiceBinding/helloWorld/'
+          timeout: 60
+          verb: POST
+          cache-response: protocol
+          cache-ttl: 900
+          output: NewOperationOut
+      - map:
+          title: 'NewOperation: output'
+          inputs:
+            input:
+              schema:
+                $ref: >-
+                  #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperationOutput
+              variable: NewOperationOut.body
+              content: application/xml
+          outputs:
+            salutation:
+              schema:
+                type: string
+              variable: message.body
+          actions:
+            - set: salutation
+              from: input.Envelope.Body.NewOperationResponse.out
+    catch: []
+  targets:
+    HelloWorld:
+      swagger: '2.0'
+      info:
+        title: HelloWorld
+        description: ''
+        x-ibm-name: helloworld
+        version: 1.0.0
+      schemes:
+        - https
+      basePath: /HelloWorld
+      produces:
+        - application/xml
+      consumes:
+        - text/xml
+      securityDefinitions:
+        clientID:
+          type: apiKey
+          name: X-IBM-Client-Id
+          in: header
+          description: ''
+      security:
+        - clientID: []
+      x-ibm-configuration:
+        type: wsdl
+        wsdl-definition:
+          wsdl: 'C:\Z_Workspace\api-soap\definitions\helloWorld'
+          service: HelloWorld
+          port: HelloWorldPort
+          soap-version: '1.1'
+        assembly:
+          execute:
+            - proxy:
+                title: proxy
+                target-url: 'http://Dawn:8100/SOAPServiceBinding/helloWorld/'
+        gateway: datapower-gateway
+        enforced: true
+        testable: true
+        phase: realized
+        cors:
+          enabled: true
+      paths:
+        /NewOperation:
+          post:
+            summary: Operation NewOperation
+            description: ''
+            operationId: NewOperation
+            x-ibm-soap:
+              soap-action: NewOperation
+              soap-operation: '{http://www.tibco.com/HelloWorld/}NewOperation'
+            parameters:
+              - in: body
+                name: body
+                required: true
+                schema:
+                  $ref: >-
+                    #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperationInput
+            responses:
+              default:
+                description: ''
+                schema:
+                  $ref: >-
+                    #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperationOutput
+      definitions:
+        Security:
+          xml:
+            namespace: >-
+              http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+            prefix: wsse
+          type: object
+          properties:
+            UsernameToken:
+              xml:
+                namespace: >-
+                  http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                prefix: wsse
+              type: object
+              properties:
+                Username:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                    prefix: wsse
+                  type: string
+                Password:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                    prefix: wsse
+                  type: string
+                Nonce:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                    prefix: wsse
+                  type: string
+                  properties:
+                    EncodingType:
+                      xml:
+                        namespace: ''
+                        attribute: true
+                      type: string
+                Created:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                  type: string
+            Timestamp:
+              xml:
+                namespace: >-
+                  http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                prefix: wsu
+              type: object
+              properties:
+                Created:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                  type: string
+                Expires:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                  type: string
+                Id:
+                  xml:
+                    namespace: >-
+                      http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                    attribute: true
+                  type: string
+        NewOperationInput:
+          type: object
+          properties:
+            Envelope:
+              xml:
+                prefix: soapenv
+                namespace: 'http://schemas.xmlsoap.org/soap/envelope/'
+              type: object
+              properties:
+                Header:
+                  $ref: >-
+                    #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperationHeader
+                Body:
+                  type: object
+                  properties:
+                    NewOperation:
+                      $ref: >-
+                        #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperation_tns
+                  required:
+                    - NewOperation
+              required:
+                - Body
+          required:
+            - Envelope
+          example: >-
+
+            <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+             <soapenv:Header>
+              <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+               <wsse:UsernameToken>
+                <wsse:Username>string</wsse:Username>
+                <wsse:Password>string</wsse:Password>
+                <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+                <wsu:Created>string</wsu:Created>
+               </wsse:UsernameToken>
+               <wsu:Timestamp wsu:Id="string">
+                <wsu:Created>string</wsu:Created>
+                <wsu:Expires>string</wsu:Expires>
+               </wsu:Timestamp>
+              </wsse:Security>
+             </soapenv:Header>
+             <soapenv:Body>
+              <tns:NewOperation xmlns:tns="http://www.tibco.com/HelloWorld/"><!-- mandatory -->
+               <in><!-- mandatory -->string</in>
+              </tns:NewOperation>
+             </soapenv:Body>
+            </soapenv:Envelope>
+        NewOperationHeader:
+          type: object
+          properties:
+            Security:
+              $ref: '#/x-ibm-configuration/targets/HelloWorld/definitions/Security'
+        NewOperationOutput:
+          type: object
+          properties:
+            Envelope:
+              xml:
+                prefix: soapenv
+                namespace: 'http://schemas.xmlsoap.org/soap/envelope/'
+              type: object
+              properties:
+                Body:
+                  type: object
+                  properties:
+                    NewOperationResponse:
+                      $ref: >-
+                        #/x-ibm-configuration/targets/HelloWorld/definitions/NewOperationResponse_tns
+              required:
+                - Body
+          required:
+            - Envelope
+          example: >-
+
+            <soapenv:Envelope
+            xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+             <soapenv:Body>
+              <tns:NewOperationResponse xmlns:tns="http://www.tibco.com/HelloWorld/">
+               <out><!-- mandatory -->string</out>
+              </tns:NewOperationResponse>
+             </soapenv:Body>
+            </soapenv:Envelope>
+        NewOperation_tns:
+          xml:
+            namespace: 'http://www.tibco.com/HelloWorld/'
+            prefix: tns
+          type: object
+          properties:
+            in:
+              type: string
+              xml:
+                namespace: ''
+                prefix: ''
+          required:
+            - in
+          example: |-
+
+            <tns:NewOperation xmlns:tns="http://www.tibco.com/HelloWorld/">
+             <in><!-- mandatory -->string</in>
+            </tns:NewOperation>
+        NewOperationResponse_tns:
+          xml:
+            namespace: 'http://www.tibco.com/HelloWorld/'
+            prefix: tns
+          type: object
+          properties:
+            out:
+              type: string
+              xml:
+                namespace: ''
+                prefix: ''
+          required:
+            - out
+          example: >-
+
+            <tns:NewOperationResponse
+            xmlns:tns="http://www.tibco.com/HelloWorld/">
+             <out><!-- mandatory -->string</out>
+            </tns:NewOperationResponse>
+  gateway: datapower-gateway
+paths: {}
+tags: []
